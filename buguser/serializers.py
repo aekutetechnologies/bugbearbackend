@@ -78,7 +78,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     # Validating Password and Confirm Password while Registration
-    def validate(self, attrs):
+    
+    '''def validate(self, attrs):
         password = attrs.get("password")
         password2 = attrs.get("password2")
         if password != password2:
@@ -91,11 +92,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Email is already taken")
 
-        return attrs
+        return attrs'''
+    #changes by ashutosh in validation function
+def validate(self, attrs):
+    password = attrs.get("password")
+    password2 = attrs.get("password2")
+    tc = attrs.get("tc")
+    
+    if password != password2:
+        raise serializers.ValidationError("Password and Confirm Password don't match")
+    
+    if not tc:
+        raise serializers.ValidationError("You must accept the terms and conditions")
 
-    def create(self, validate_data):
+    email = attrs.get("email")
+    if User.objects.filter(email__iexact=email).exists():
+        raise serializers.ValidationError("Email is already taken")
+
+    return attrs
+
+    '''def create(self, validate_data):
         print(validate_data)
-        return User.objects.create_user(**validate_data)
+        return User.objects.create_user(**validate_data)'''
+    #by ashutosh
+    def create(self, validated_data):
+        validated_data.pop("password2")  # removing password2 as it's not needed in vaildation
+        user = User.objects.create_user(**validated_data)
+        return user
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
